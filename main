@@ -1,0 +1,376 @@
+import pygame
+import time
+from pygame.locals import *
+import random
+from pygame import mixer
+
+# pygame
+pygame.init()
+
+# proměnné na barvy a obrazovku
+bila = (255, 255, 255)
+cerna = (0, 0, 0)
+seda = (128, 128, 128)
+tmava_seda = (150, 150, 150)
+sirka_okna = 1200
+vyska_okna = 710
+# Hudba
+mixer.music.load('music1.wav')
+mixer.music.play()
+# obrazovka
+okno = pygame.display.set_mode((sirka_okna, vyska_okna))
+ikona = pygame.image.load('chleba00.png')
+pygame.display.set_icon(ikona)
+
+# Název nad obrazovkou
+pygame.display.set_caption('Bread and mayo')
+
+# Vsechny mozne obrazky a blbosti
+
+pozadi = pygame.image.load('bg1.png', 'bg8.png').convert()
+pozadix = 0
+pozadix2 = pozadi.get_width()
+
+
+# Hrac
+class Hrac(object):
+    run = [pygame.image.load('behaci_chleba00.png'), pygame.image.load('behaci_chleba01.png'),
+           pygame.image.load('behaci_chleba02.png'),
+           pygame.image.load('behaci_chleba03.png'), pygame.image.load('behaci_chleba04.png'),
+           pygame.image.load('behaci_chleba05.png'),
+           pygame.image.load('behaci_chleba06.png'), pygame.image.load('behaci_chleba07.png'),
+           pygame.image.load('behaci_chleba08.png'),
+           pygame.image.load('behaci_chleba09.png'), pygame.image.load('behaci_chleba10.png'),
+           pygame.image.load('behaci_chleba11.png'),
+           pygame.image.load('behaci_chleba12.png'), pygame.image.load('behaci_chleba13.png'),
+           pygame.image.load('behaci_chleba14.png'),
+           pygame.image.load('behaci_chleba15.png'), pygame.image.load('behaci_chleba16.png'),
+           pygame.image.load('behaci_chleba17.png'),
+           pygame.image.load('behaci_chleba18.png')]
+    chlebik = pygame.image.load('pad.png')
+
+    jump = [pygame.image.load('chleba00.png'), pygame.image.load('chleba01.png'), pygame.image.load('chleba02.png'),
+            pygame.image.load('chleba03.png'), pygame.image.load('chleba04.png'),
+            pygame.image.load('chleba05.png'), pygame.image.load('chleba06.png'), pygame.image.load('chleba07.png'),
+            pygame.image.load('chleba08.png'), pygame.image.load('chleba09.png'),
+            pygame.image.load('chleba10.png'), pygame.image.load('chleba11.png'), pygame.image.load('chleba12.png'),
+            pygame.image.load('chleba13.png'), pygame.image.load('chleba14.png'),
+            pygame.image.load('chleba15.png'), pygame.image.load('chleba16.png'), pygame.image.load('chleba17.png'),
+            pygame.image.load('chleba18.png'), pygame.image.load('chleba19.png'),
+            pygame.image.load('chleba20.png')]
+
+    jumpList = [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4,
+                4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1,
+                -1, -1, -1, -1, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3,
+                -3, -3, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4]
+
+    def __init__(self, x, y, sirka, vyska):
+        self.x = x
+        self.y = y
+        self.sirka = sirka
+        self.vyska = vyska
+        self.jumping = False
+        self.jumpcount = 0
+        self.runcount = 0
+        self.pad = False
+        self.rect = pygame.Rect(x, y, sirka, vyska)
+
+    def draw(self, okno):
+        if self.pad:
+            okno.blit(self.chlebik, (self.x, self.y + 30))
+
+        elif self.jumping:
+            self.y -= self.jumpList[self.jumpcount] * 2
+            okno.blit(self.jump[self.jumpcount // 18], (self.x, self.y))
+            self.jumpcount += 1
+            if self.jumpcount > 108:
+                self.jumpcount = 0
+                self.jumping = False
+                self.runcount = 0
+            self.rect = pygame.Rect(self.x + 70, self.y + 90, self.sirka, self.vyska)
+
+        else:
+            if self.runcount > 42:
+                self.runcount = 0
+            okno.blit(self.run[self.runcount // 6], (self.x, self.y))
+            self.runcount += 1
+            self.rect = pygame.Rect(self.x + 70, self.y + 90, self.sirka, self.vyska)
+        # pygame.draw.rect(okno, (255, 255, 255), self.rect, 2)
+
+
+# Enemy
+class Mayo(object):
+    mayo = [pygame.image.load('mayo00.png'), pygame.image.load('mayo01.png'), pygame.image.load('mayo02.png'),
+            pygame.image.load('mayo03.png'), pygame.image.load('mayo04.png'),
+            pygame.image.load('mayo05.png'), pygame.image.load('mayo06.png'), pygame.image.load('mayo07.png'),
+            pygame.image.load('mayo08.png'), pygame.image.load('mayo09.png'),
+            pygame.image.load('mayo10.png'), pygame.image.load('mayo11.png'), pygame.image.load('mayo12.png'),
+            pygame.image.load('mayo13.png'), pygame.image.load('mayo14.png'),
+            pygame.image.load('mayo15.png'), pygame.image.load('mayo16.png'), pygame.image.load('mayo17.png'),
+            pygame.image.load('mayo18.png'), pygame.image.load('mayo19.png'),
+            pygame.image.load('mayo20.png'), pygame.image.load('mayo21.png'), pygame.image.load('mayo22.png'),
+            pygame.image.load('mayo23.png'), pygame.image.load('mayo24.png'),
+            pygame.image.load('mayo25.png'), pygame.image.load('mayo26.png'), pygame.image.load('mayo27.png'),
+            pygame.image.load('mayo28.png'), pygame.image.load('mayo29.png'),
+            pygame.image.load('mayo30.png'), pygame.image.load('mayo31.png'), pygame.image.load('mayo32.png'),
+            pygame.image.load('mayo33.png'), pygame.image.load('mayo34.png'),
+            pygame.image.load('mayo35.png')]
+
+    def __init__(self, x, y, sirka, vyska):
+        self.x = x
+        self.y = y
+        self.sirka = sirka
+        self.vyska = vyska
+        self.pocet = 0
+        self.rect = pygame.Rect(x, y, 40, 64)
+
+    def draw(self, okno):
+        self.rect = pygame.Rect(self.x + 45, self.y + 35, self.sirka - 4, self.vyska - 4)
+        if self.pocet >= 35:
+            self.pocet = 0
+        okno.blit(self.mayo[self.pocet // 1], (self.x, self.y))
+        self.pocet += 1
+        # pygame.draw.rect(okno, (250, 250, 250), self.rect, 2)
+
+    def kolize(self, postava):
+        return self.rect.colliderect(postava.rect)
+
+
+# pismena a nastavení fontu
+def text_objects(text, font):
+    textsurface = font.render(text, True, bila)
+    return textsurface, textsurface.get_rect()
+
+
+# Nastavení fontu
+def zprava(text):
+    velkytext = pygame.font.Font('freesanabold.ttf', 115)
+    textsurf, textrect = text_objects(text, velkytext)
+    textrect.center = ((sirka_okna / 2), (vyska_okna / 2))
+    okno.blit(textsurf, textrect)
+
+    pygame.display.update()
+
+    time.sleep(2)
+
+    main_loop()
+
+
+# Funkcnost tlacitek na zacatku
+def tlacitko(msg, x, y, w, h, ac, ic, akce=None):
+    mouse = pygame.mouse.get_pos()
+    klik = pygame.mouse.get_pressed()
+
+    if x + w > mouse[0] > x and 550 + 100 > mouse[1] > y:
+        pygame.draw.rect(okno, ac, (x, y, w, h))
+        if klik[0] == 1 and akce != None:
+            if akce == 'play':
+                main_loop()
+            elif akce == 'quit':
+                pygame.quit()
+                quit()
+
+    else:
+        pygame.draw.rect(okno, ic, (x, y, w, h))
+
+    malytext = pygame.font.Font('freesansbold.ttf', 50)
+    textsurf, textrect = text_objects(msg, malytext)
+    textrect.center = ((x + (w / 2)), (y + (h / 2)))
+    okno.blit(textsurf, textrect)
+
+
+# Zacatek
+def intro_hry():
+    intro = True
+
+    while intro:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        okno.fill(cerna)
+        velkytext = pygame.font.Font('freesansbold.ttf', 115)
+        textsurf, textrect = text_objects('Bread & Mayo', velkytext)
+        textrect.center = ((sirka_okna / 2), (vyska_okna / 2))
+        okno.blit(textsurf, textrect)
+        tlacitko('Start', 150, 550, 200, 100, tmava_seda, seda, 'play')
+        tlacitko('Quit', 850, 550, 200, 100, tmava_seda, seda, 'quit')
+
+        pygame.display.update()
+        clock.tick(30)
+
+
+# Obrazovka s konečným score
+def konec_hry():
+    global pauza
+    global objekty
+    global rychlost
+    global score
+    pauza = 0
+    rychlost = 100
+    objekty = []
+
+    run = True
+    while run:
+        pygame.time.delay(100)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                postava.pad = False
+                postava.jumping = False
+                mixer.music.load('music1.wav')
+                mixer.music.play()
+                intro_hry()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                run = False
+                postava.pad = False
+                postava.jumping = False
+                mixer.music.load('music1.wav')
+                mixer.music.play()
+                intro_hry()
+        okno.blit(pozadi, (0, 0))
+        velkytext = pygame.font.SysFont('freesansbold.ttf', 115)
+        minulescore = velkytext.render('High Score: ' + str(aktualizace()), 1, (0, 0, 0))
+        okno.blit(minulescore, (sirka_okna / 2 - minulescore.get_width() / 2, 10))
+        novescore = velkytext.render('Score: ' + str(score), 1, (0, 0, 0))
+        okno.blit(novescore, (sirka_okna / 2 - novescore.get_width() / 2, 328))
+        pygame.display.update()
+    score = 0
+
+
+# Funkce pro soubor pro score
+def aktualizace():
+    a = open('01scores.txt', 'r')
+    soubor = a.readlines()
+    posledni = int(soubor[0])
+
+    if posledni < int(score):
+        a.close()
+        soubor = open('01scores.txt', 'w')
+        soubor.write(str(score))
+        soubor.close()
+
+        return score
+    return posledni
+
+
+postava = Hrac(50, 500, 100, 65)
+pygame.time.set_timer(USEREVENT + 1, 500)
+pygame.time.set_timer(USEREVENT + 2, random.randrange(1500, 3000))
+objekty = []
+rychlost = 100
+score = 0
+clock = pygame.time.Clock()
+
+
+# Hmm co to asi bude kdyz se to jmenuje main loop
+def main_loop():
+    pozadix = 0
+    pozadix2 = pozadi.get_width()
+    rychlost = 100
+    pauza = 0
+    padrychlost = 0
+    run = True
+
+    while run:
+        global score
+        score = rychlost // 5 - 20
+        if pauza > 0:
+            pauza += 1
+            if pauza > padrychlost:
+                over = mixer.Sound('ove1r1.wav')
+                over.play()
+                konec_hry()
+
+        pozadix -= 5
+        pozadix2 -= 5
+        if pozadix < pozadi.get_width() * -1:
+            pozadix = pozadi.get_width()
+        if pozadix2 < pozadi.get_width() * -1:
+            pozadix2 = pozadi.get_width()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            if event.type == USEREVENT + 1:
+                rychlost += 1
+            if event.type == USEREVENT + 2:
+                r = random.randrange(0, 11)
+                if r == 0:
+                    objekty.append(Mayo(1200, 550, 40, 64))
+                    objekty.append(Mayo(1400, 550, 40, 64))
+                    objekty.append(Mayo(1500, 550, 40, 64))
+                if r == 1:
+                    objekty.append(Mayo(1200, 450, 40, 64))
+                    objekty.append(Mayo(1800, 400, 40, 64))
+                if r == 2:
+                    objekty.append(Mayo(1200, 400, 40, 64))
+                if r == 3:
+                    objekty.append(Mayo(1300, 350, 40, 64))
+                    objekty.append(Mayo(1800, 550, 40, 64))
+                if r == 4:
+                    objekty.append(Mayo(1200, 548, 40, 64))
+                    objekty.append(Mayo(2400, 549, 40, 64))
+                if r == 5:
+                    objekty.append(Mayo(1200, 549, 40, 64))
+                    objekty.append(Mayo(1700, 350, 40, 64))
+                if r == 6:
+                    objekty.append(Mayo(1200, 545, 40, 64))
+                    objekty.append(Mayo(1900, 520, 40, 64))
+                if r == 7:
+                    objekty.append(Mayo(1200, 520, 40, 64))
+                    objekty.append(Mayo(2000, 500, 40, 64))
+                if r == 8:
+                    objekty.append(Mayo(1200, 500, 40, 64))
+                    objekty.append(Mayo(1700, 400, 40, 64))
+                if r == 9:
+                    objekty.append(Mayo(1200, 450, 40, 64))
+                if r == 10:
+                    objekty.append(Mayo(1200, 555, 40, 64))
+                    objekty.append(Mayo(1600, 400, 40, 64))
+
+        klik = pygame.mouse.get_pressed()
+        keys = pygame.key.get_pressed()
+        if keys[K_ESCAPE]:
+            intro_hry()
+        if keys[K_SPACE]:
+            if not postava.jumping:
+                hop = mixer.Sound('hop1.wav')
+                hop.play()
+                postava.jumping = True
+        if klik[0]:
+            if not postava.jumping:
+                hop = mixer.Sound('hop1.wav')
+                hop.play()
+                postava.jumping = True
+
+        okno.blit(pozadi, (pozadix, 0))
+        okno.blit(pozadi, (pozadix2, 0))
+        postava.draw(okno)
+        for objekt in objekty:
+            objekt.draw(okno)
+        font = pygame.font.SysFont('freesansbold.ttf', 50)
+        text = font.render('Score: ' + str(score), 1, (0, 0, 0))
+        okno.blit(text, (1000, 10))
+        for objekt in objekty:
+            if objekt.kolize(postava):
+                bum = mixer.Sound('hm1.wav')
+                bum.play()
+                postava.pad = True
+                if pauza == 0:
+                    padrychlost = rychlost
+                    pauza = 1
+            objekt.x -= 8
+            if objekt.x < objekt.sirka * -1:
+                objekty.pop(objekty.index(objekt))
+        clock.tick(rychlost)
+        pygame.display.update()
+
+
+# Vyvolání funkcí
+intro_hry()
+main_loop()
+# Konec
+pygame.quit()
+quit()
+# High score 27
